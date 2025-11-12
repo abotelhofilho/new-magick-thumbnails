@@ -1,13 +1,14 @@
 # new-magick-thumbnails
 
-This folder contains a small PowerShell function `new-magick-thumbnails` that creates JPEG thumbnail images from all `.jpg` files in a directory using ImageMagick's `magick` CLI.
+
+This is a PowerShell function `new-magick-thumbnails` that finds image files and creates thumbnails using ImageMagick's `magick` CLI.
 
 ## What it does
 
-- Checks the provided directory exists.
+- Checks the provided path exists and verifies it is a directory.
 - Verifies `winget` is available (used to install ImageMagick if missing).
 - Installs ImageMagick `ImageMagick.Q16-HDRI` via `winget` if it's not detected.
-- Uses `magick` to resize each `.jpg` in the directory and writes a thumbnail next to each file with the suffix `_thumb.jpg`.
+- Enumerates image files (jpg / jpeg / png) and uses `magick -resize` to create thumbnails next to each file, preserving the original file extension and adding the `_thumb` suffix (e.g. `photo.jpg` -> `photo_thumb.jpg`).
 
 ## Prerequisites
 
@@ -23,35 +24,30 @@ The script file is `func_new-magick-thumbnail.ps1`. To use the function in your 
 
 ```powershell
 # From the folder containing the script
-. .\\func_new-magick-thumbnail.ps1
-
-# Now the function is available
-Get-Command new-magick-thumbnails
+. .\func_new-magick-thumbnail.ps1
 ```
-
-Alternatively, you can copy the function into your PowerShell profile or convert it into a small module for reuse.
 
 ## Usage
 
 The function accepts two mandatory parameters:
 
-- `-path` : Path to the directory containing source `.jpg` images.
+- `-path` : Path to the directory containing source images.
 - `-resize` : Resize parameter passed to ImageMagick's `magick -resize` (examples below).
 
 Example (resize by percentage):
 
 ```powershell
-new-magick-thumbnails -path "C:\\Users\\You\\Pictures\\to-thumb" -resize "50%"
+new-magick-thumbnails -path "C:\Users\You\Pictures\to-thumb" -resize "50%"
 ```
 
 Examples (other `-resize` values ImageMagick supports):
 
 ```powershell
 # Resize to a width of 200px, auto height
-new-magick-thumbnails -path "C:\\path\\to\\images" -resize "200x"
+new-magick-thumbnails -path "C:\path\to\images" -resize "200x"
 
 # Resize and force exact dimensions (may change aspect ratio)
-new-magick-thumbnails -path "C:\\path\\to\\images" -resize "200x200!"
+new-magick-thumbnails -path "C:\path\to\images" -resize "200x200!"
 ```
 
 Output files:
@@ -59,18 +55,15 @@ Output files:
 
 ## Notes and behaviour
 
-- The script only processes `*.jpg` files (case depends on your filesystem). It collects files using `Get-ChildItem -File *.jpg`.
-- If the provided path does not end with a backslash, the script will append one.
-- The script checks for `winget` and tries to install ImageMagick when it's not present. If `winget` is missing you'll see an error message and must install `winget` first.
+- The script looks for files with the extensions `.jpg`, `.jpeg`, and `.png` and will create thumbnails that keep the same extension (for example, `image.png` -> `image_thumb.png`).
+- It validates the `-path` parameter exists and is a directory; if the path does not end with a backslash the function appends one.
+- The script checks for `winget` and will attempt to install ImageMagick when it's not present. If `winget` is missing you'll see an error message and must install `winget` first.
 
 ## Troubleshooting
 
 - If thumbnails are not created:
 	- Confirm `magick --version` runs successfully in your session.
 	- Ensure you ran PowerShell as Administrator if `winget` needs elevation to install ImageMagick.
-	- Confirm your path contains `.jpg` files (and not `.jpeg` — this script only collects `*.jpg`).
-
-- If you want to process `.jpeg` files as well, edit the script's `Get-ChildItem` call or run separate commands.
 
 ## Security / Safety
 
@@ -80,11 +73,8 @@ Output files:
 
 ```powershell
 # Open elevated PowerShell (if you expect to install ImageMagick)
-cd C:\\path\\to\\new-magick-thumbnails
-. .\\func_new-magick-thumbnail.ps1
-new-magick-thumbnails -path "C:\\Users\\You\\Pictures\\set1" -resize "40%"
+cd C:\path\to\new-magick-thumbnails
+. .\func_new-magick-thumbnail.ps1
+new-magick-thumbnails -path "C:\Users\You\Pictures\set1" -resize "40%"
 ```
 
-## License
-
-This repository does not include an explicit license for the script. If you want it licensed (e.g., MIT), add a `LICENSE` file and update this README accordingly.
