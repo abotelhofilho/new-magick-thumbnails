@@ -7,6 +7,9 @@ function new-magick-thumbnails {
     ## check if provided path is good
     Write-Verbose "Checking path..."
     if (!(Test-Path $path)) { Write-Host "An error occurred. Path provided doesn't exist. Try again." -ForegroundColor Red }
+    ## check if path is actually a Directory
+    if ($(Get-ItemProperty $path).Attributes -ne "Directory") { Write-Host "An error occurred. Path provided isn't a dirctory. Try again." -ForegroundColor Red }
+    
     ## check if winget is installed, needed to install ImageMagick in the next check
     Write-Verbose "Checking if winget is installed..."
     try {
@@ -34,7 +37,7 @@ function new-magick-thumbnails {
     if ($path[-1] -notmatch "\`\") { $path = $path + "`\" }
     ## get list of jpg files from directory
     Write-Verbose "Getting list of jpg files from provided path..."
-    $imgs = Get-ChildItem -Path $path -File *.jpg
+    $imgs = Get-ChildItem -Path $path | Where-Object { ($_.name -Like "*.jpg") -or ($_.name -Like "*.jpeg") -or ($_.name -Like "*.png") }
     ## loop through each file and create thumbnail file
     Write-Verbose "Looping through each file and creating thumbnail file"
     foreach (
@@ -42,7 +45,7 @@ function new-magick-thumbnails {
     ) { 
         ## set thumbnail file name
         Write-Verbose "Creating thumbnail file name..."
-        $fileSmlName = $path + $img.BaseName + "_thumb.jpg"
+        $fileSmlName = $path + $img.BaseName + "_thumb" + $img.Extension
         Write-Verbose "$fileSmlName"
         magick $img.FullName -resize $resize $fileSmlName 
     }
